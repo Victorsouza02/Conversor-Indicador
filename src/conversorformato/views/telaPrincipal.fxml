@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" prefHeight="421.0" prefWidth="399.0" style="-fx-background-color: #f0f0f0;" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="conversorformato.controllers.TelaPrincipalController">
+   <children>
+      <Label layoutX="126.0" layoutY="129.0" text="Porta :">
+         <font>
+            <Font size="13.0" />
+         </font>
+      </Label>
+      <ComboBox fx:id="cb_porta_origem" layoutX="186.0" layoutY="126.0" prefHeight="25.0" prefWidth="83.0" />
+      <Label layoutX="123.0" layoutY="238.0" text="Porta :">
+         <font>
+            <Font size="13.0" />
+         </font>
+      </Label>
+      <ComboBox fx:id="cb_porta_destino" layoutX="183.0" layoutY="235.0" prefHeight="25.0" prefWidth="83.0" />
+      <Button fx:id="iniciar" layoutX="205.0" layoutY="302.0" mnemonicParsing="false" prefHeight="31.0" prefWidth="95.0" text="Iniciar" textFill="#111111">
+         <font>
+            <Font size="15.0" />
+         </font>
+      </Button>
+      <Button fx:id="parar" layoutX="97.0" layoutY="302.0" mnemonicParsing="false" prefHeight="31.0" prefWidth="95.0" text="Parar ">
+         <font>
+            <Font size="15.0" />
+         </font>
+      </Button>
+      <Label layoutX="137.0" layoutY="59.0" text="Origem de Dados :">
+         <font>
+            <Font size="13.0" />
+         </font>
+      </Label>
+      <ComboBox fx:id="cb_equip" layoutX="186.0" layoutY="91.0" prefHeight="25.0" prefWidth="118.0" />
+      <Label layoutX="96.0" layoutY="94.0" text="Equipamento :">
+         <font>
+            <Font size="13.0" />
+         </font>
+      </Label>
+      <Label layoutX="137.0" layoutY="169.0" text="Destino dos Dados :">
+         <font>
+            <Font size="13.0" />
+         </font>
+      </Label>
+      <Label layoutX="104.0" layoutY="200.0" text="Formato :">
+         <font>
+            <Font size="13.0" />
+         </font>
+      </Label>
+      <ComboBox fx:id="cb_formato" layoutX="183.0" layoutY="197.0" prefHeight="25.0" prefWidth="118.0" />
+      <Pane prefHeight="25.0" prefWidth="399.0" style="-fx-background-color: #d3d3d3;" />
+      <Pane layoutY="396.0" prefHeight="25.0" prefWidth="399.0" style="-fx-background-color: #d3d3d3;" />
+   </children>
+</AnchorPane>
