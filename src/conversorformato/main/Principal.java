@@ -35,8 +35,8 @@ public class Principal extends Application {
     public void start(Stage primaryStage) {
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/conversorformato/views/telaPrincipal.fxml"));
-            Scene scene = new Scene(root, 385, 411);
-            primaryStage.setTitle("Conversor de Formatos - Serial");
+            Scene scene = new Scene(root, 464, 411);
+            primaryStage.setTitle("Conversor de Protocolo de Comunicação - Serial");
             primaryStage.getIcons().addAll(new Image(Principal.class.getResourceAsStream("/conversorformato/imgs/icone.png")));
             primaryStage.setScene(scene);
             primaryStage.setResizable(false);

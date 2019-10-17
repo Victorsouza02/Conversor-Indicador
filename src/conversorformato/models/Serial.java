@@ -9,9 +9,6 @@ import conversorformato.utils.Formatacao;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.JOptionPane;
 import jssc.SerialPort;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
@@ -38,13 +35,19 @@ public class Serial {
     private static boolean ok = false;
     public static List<String> portas = new ArrayList<String>();
     public static List<String> equipamentos = new ArrayList<String>();
+    //ATRIBUTOS DA PORTA DESTINO
+    private int d_baud;
+    private int d_databits;
+    private int d_stopbit;
+    private int d_parity;
 
-    public Serial(String porta, String porta_emulada, String equipamento) {
-        // AO INICIAR A CLASSE
-        setPort(porta); //PEGAR PORTA
-        setEquipamento(equipamento); //PEGAR EQUIPAMENTO
-        setPort_emu(porta_emulada);
-        selecionarConfigEquipamento(); //SELECIONA CONFIGURACAO DE ACORDO COM EQUIPAMENTO
+    public Serial(String porta, String porta_emulada, String equipamento, String destino_baud , String destino_parity, String destino_datasize, String destino_stopbit) {
+        //Ao instanciar a classe
+        setPort(porta); //Pegar a porta origem
+        setEquipamento(equipamento); //Pegar equipamento
+        setPort_emu(porta_emulada); //Pegar a porta destino
+        selecionarConfigEquipamento(); //Seleciona a configuração de acordo com o equipamento informado.
+        configPortaDestino(destino_baud, destino_parity, destino_datasize, destino_stopbit);
     }
 
     public void conectarPorta() throws SerialPortException {
@@ -58,7 +61,24 @@ public class Serial {
     public void conectarPortaEmulada() throws SerialPortException {
         serialPort_emu = new SerialPort(getPort_emu());
         serialPort_emu.openPort();
-        serialPort_emu.setParams(baud, databits, stopbit, parity, false, false);
+        serialPort_emu.setParams(getD_baud(), getD_databits(), getD_stopbit(), getD_parity(), false, false);
+    }
+    
+    public void configPortaDestino(String baud, String parity, String datasize, String stopbit) {
+        setD_baud(Integer.parseInt(baud));
+        setD_databits(Integer.parseInt(datasize));
+        setD_stopbit(Integer.parseInt(stopbit));
+        switch(parity){
+            case "none":
+                setD_parity(SerialPort.PARITY_NONE);
+                break;
+            case "odd":
+                setD_parity(SerialPort.PARITY_ODD);
+                break;
+            case "even":
+                setD_parity(SerialPort.PARITY_EVEN);
+                break;
+        }
     }
 
     public void fecharPorta() {
@@ -86,7 +106,7 @@ public class Serial {
         }
     }
 
-    public String lerLinha() {
+    private String lerLinha() {
         String linha = "";
         boolean ler = true;
         while (ler == true) {
@@ -114,7 +134,7 @@ public class Serial {
     }
 
     //RETORNA DADOS DA SERIAL
-    public String receberDadosSerial() {
+    private String receberDadosSerial() {
         if (ok == true) {
             return lerLinha();
         }
@@ -130,8 +150,7 @@ public class Serial {
         }
         return portas;
     }
-
-    //PEGA OS EQUIPAMENTOS COMPATIVEIS E ADICIONA A UMA LISTA DE EQUIPAMENTOS
+    //Pega os equipamentos compativeis e adiciona a uma lista de equipamentos
     public static List<String> listaEquipamentos() {
         List<String> equipamentos = new ArrayList<String>();
         equipamentos.add("WT1000N"); //INDICADOR WEIGHTECH WT1000N
@@ -141,8 +160,8 @@ public class Serial {
         return equipamentos;
     }
 
-    //SELEÇÃO DE CONFIGURAÇÃO DE EQUIPAMENTO
-    public void selecionarConfigEquipamento() {
+    //Seleção de configuração do equipamento
+    private void selecionarConfigEquipamento() {
         switch (equipamento) {
             case "WT1000N":
                 configWT1000N();
@@ -156,8 +175,8 @@ public class Serial {
         }
     }
 
-    //PADRAO DE STRING PARA CADA EQUIPAMENTO
-    public String padraoString() {
+    //Padrão de String para cada equipamento
+    private String padraoString() {
         String padrao = null;
         switch (equipamento) {
             case "WT1000N":
@@ -173,34 +192,32 @@ public class Serial {
         return padrao;
     }
 
-    //SELECIONA O TIPO DE FORMATAÇÃO DE ACORDO COM O EQUIPAMENTO
+    //Seleciona o tipo de formatação de acordo com o equipamento
     public Map<String, String> selecionarDadosEquipamento() {
         switch (equipamento) {
             case "WT1000N":
+                //Retorna dados formatados do WT1000N
                 return Formatacao.formatarDadosWT1000N(receberDadosSerial());
             case "3101C":
+                //Retorna dados formatados do 3101C
                 return Formatacao.formatarDados3101C(receberDadosSerial());
             case "WT27":
+                //Retorna dados formatados do WT27
                 return Formatacao.formatarDadosWT27(receberDadosSerial());
         }
         return null;
     }
 
-    /**
-     * *******CONFIGURAÇÃO DE COMUNICAÇÃO ALFA 3101C****
-     */
+    /********** Configuração de comunicação serial ALFA 3101C*****/
     public void config3101C() {
         setBaud(9600);
         setDatabits(8);
         setStopbit(1);
         setParity(0);
     }
+    /*********************************************/
 
-    /**
-     * *****************************************
-     */
-
-    /**********CONFIGURAÇÃO DE COMUNICAÇÃO WEIGHTECH WT1000N*******/
+    /********** Configuração de comunicação serial WEIGHTECH WT1000N *******/
     public void configWT1000N() {
         setBaud(9600);
         setDatabits(8);
@@ -210,7 +227,7 @@ public class Serial {
 
     /***********************************************/
     
-    /**********CONFIGURAÇÃO DE COMUNICAÇÃO WEIGHTECH WT27*******/
+    /********** Configuração de comunicação serial WEIGHTECH WT27 *******/
     public void configWT27() {
         setBaud(9600);
         setDatabits(8);
@@ -219,10 +236,10 @@ public class Serial {
     }
     /***********************************************/
     
+    
 
     //OUVINDO PORTA SERIAL E RETIRANDO DADOS DESNECESSÁRIOS
     static class SerialPortReader implements SerialPortEventListener {
-
         @Override
         public void serialEvent(SerialPortEvent event) {
             if (event.getEventType() > 0) {
@@ -330,5 +347,39 @@ public class Serial {
     public void setPort_emu(String port_emu) {
         this.port_emu = port_emu;
     }
+
+    public int getD_baud() {
+        return d_baud;
+    }
+
+    public void setD_baud(int d_baud) {
+        this.d_baud = d_baud;
+    }
+
+    public int getD_databits() {
+        return d_databits;
+    }
+
+    public void setD_databits(int d_databits) {
+        this.d_databits = d_databits;
+    }
+
+    public int getD_stopbit() {
+        return d_stopbit;
+    }
+
+    public void setD_stopbit(int d_stopbit) {
+        this.d_stopbit = d_stopbit;
+    }
+
+    public int getD_parity() {
+        return d_parity;
+    }
+
+    public void setD_parity(int d_parity) {
+        this.d_parity = d_parity;
+    }
+    
+    
 
 }

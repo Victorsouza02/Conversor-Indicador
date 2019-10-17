@@ -6,7 +6,6 @@
 package conversorformato.models;
 
 import conversorformato.main.Principal;
-import conversorformato.utils.Formatacao;
 import java.util.HashMap;
 import java.util.Map;
 import javafx.application.Platform;
@@ -21,20 +20,18 @@ public class Threads {
         Map<String, String> dados = new HashMap<String, String>();
         //THREAD PARA LEITURA DE SERIAL CONTINUA
         boolean ok = true;
-        while (ok == true) {
-            ok = Principal.isIniciado();
-            if (Principal.getSerial() != null) {
+        while (true) {
+            ok = Principal.isIniciado();        
+            if (Principal.getSerial() != null && ok == true) {
                 dados = Principal.getSerial().selecionarDadosEquipamento();
                 String codEstabilidade = dados.get("estavel");
                 String peso_bru_var = dados.get("peso_bru");
                 String peso_liq_var = dados.get("peso_liq");
                 String tara_var = dados.get("tara");
-                Platform.runLater(() -> {
-                    Principal.setPeso_bru(peso_bru_var);
-                    Principal.setPeso_liq(peso_liq_var);
-                    Principal.setTara(tara_var);
-                    Principal.setEstabilidade(codEstabilidade);
-                });
+                Principal.setPeso_bru(peso_bru_var);
+                Principal.setPeso_liq(peso_liq_var);
+                Principal.setTara(tara_var);
+                Principal.setEstabilidade(codEstabilidade);
                 Principal.getSerial().escreverLinha();
                 try {
                     java.lang.Thread.sleep(50);

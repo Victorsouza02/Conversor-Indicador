@@ -9,67 +9,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+
 
 /**
  *
  * @author Desenvolvimento
  */
 public class Formatacao {
-
-    //METODO PARA ADICIONAR LIMITE DE TEXTO EM UM CAMPO
-    public static void addTextLimiter(final TextField tf, final int maxLength) {
-        tf.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(final ObservableValue<? extends String> ov, final String oldValue, final String newValue) {
-                if (tf.getText().length() > maxLength) {
-                    String s = tf.getText().substring(0, maxLength);
-                    tf.setText(s);
-                }
-            }
-        });
-    }
-
-    public static void onlyNumber(final TextField tf) {
-        tf.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(final ObservableValue<? extends String> ov, final String oldValue, final String newValue) {
-                if (!newValue.matches("\\d*")) {
-                    tf.setText(newValue.replaceAll("[^\\d]", ""));
-                }
-            }
-        });
-    }
-
-    //MUDA O STATUS DE ESTABILIDADE DO DISPLAY DE ACORDO COM O CODIGO DE ESTABILIDADE
-    public static void estabilizacaoDisplay(Label labelEstabilizacao, String codEstabilidade) {
-        switch (codEstabilidade) {
-            case "E":
-                labelEstabilizacao.setText("Estável");
-                labelEstabilizacao.setStyle("-fx-text-fill: green;");
-                break;
-            case "O":
-                labelEstabilizacao.setText("Oscilando");
-                labelEstabilizacao.setStyle("-fx-text-fill: red;");
-                break;
-            case "SOB":
-                labelEstabilizacao.setText("Sobrecarga");
-                labelEstabilizacao.setStyle("-fx-text-fill: yellow;");
-                break;
-            case "SAT":
-                labelEstabilizacao.setText("Saturado");
-                labelEstabilizacao.setStyle("-fx-text-fill: #fc5e14;");
-                break;
-            case "ERR":
-                labelEstabilizacao.setText("Erro - Format");
-                labelEstabilizacao.setStyle("-fx-text-fill: #8434e0;");
-                break;
-        }
-    }
-
+    
+    //@@@@@@@@@@ FORMATAÇÃO DE DADOS PROTOCOLO COMUNICAÇÃO @@@@@@@@@@@@@@//
+    
     //Formatação e tratamento dos dados do indicador ALFA 3101C
     public static Map<String, String> formatarDados3101C(String dado) {
         Map<String, String> dados = new HashMap<String, String>();
@@ -87,63 +36,61 @@ public class Formatacao {
 
         try {
             //ALOCAÇÃO DE VALORES
-            if (temVirgula && !sobrecarga && !saturado) { //SE TIVER VIRGULA NOS DADOS
-                peso_bru = dado.substring(3, 10).replaceAll(",", "."); // PARTE ( 00,000) 
-                peso_liq = dado.substring(3, 10).replaceAll(",", "."); // PARTE ( 00,000) 
-                tara = dado.substring(13, 20).replaceAll(",", "."); // PARTE ( 00,000) 
-                casasDecimais = (6 - tara.indexOf(".")); // CONTA QUANTAS CASAS DECIMAIS
-            } else if (!temVirgula && !sobrecarga && !saturado) { //SE NAO TIVER VIRGULA OU SOBRECARGA
-                peso_bru = dado.substring(3, 9); // PARTE ( 00000) 
-                peso_liq = dado.substring(3, 9); // PARTE ( 00000) 
-                tara = dado.substring(12, 18); // PARTE ( 00000) 
+            if (temVirgula && !sobrecarga && !saturado) { //Se tiver virgula nos dados e não tiver sobrecarga/saturada
+                peso_bru = dado.substring(3, 10).replaceAll(",", "."); // Peso Bruto ( 00,000) 
+                peso_liq = dado.substring(3, 10).replaceAll(",", "."); // Peso Liquido ( 00,000) 
+                tara = dado.substring(13, 20).replaceAll(",", "."); // Tara( 00,000) 
+                casasDecimais = (6 - tara.indexOf(".")); // Conta as casas decimais
+            } else if (!temVirgula && !sobrecarga && !saturado) { //Se não tiver virgula nos dados e não tiver sobrecarga/saturada
+                peso_bru = dado.substring(3, 9); // Peso Bruto ( 00000) 
+                peso_liq = dado.substring(3, 9); // Peso Liquido ( 00000) 
+                tara = dado.substring(12, 18); // Tara ( 00000) 
             }
 
             //
-            if (!sobrecarga && !saturado) { //SE NÃO ESTIVER COM SOBRECARGA
+            if (!sobrecarga && !saturado) { //Se não estiver com sobrecarga/saturado
                 List<String> pesos = new ArrayList<String>();
                 pesos.add(peso_bru);
                 pesos.add(peso_liq);
                 pesos.add(tara);
                 int cnt = 0;
-                for (String peso : pesos) { //PARA CADA TIPO DE PESO FORMATAR
-                    if (peso.equals(" 00000")) { //SE OS DIGITOS FOREM TODOS ZERO
+                for (String peso : pesos) { //Para cada tipo de peso formatar
+                    if (peso.equals(" 00000")) { //Se todos os digitos forem zero
                         peso = "0";
                     } else {
-                        if (peso.contains("-")) { //SE TIVER SINAL NEGATIVO
-                            if (peso.contains(".")) { // SE TIVER PONTO DECIMAL
+                        if (peso.contains("-")) { //Se tiver sinal negativo
+                            if (peso.contains(".")) { // Se tiver ponto decimal
                                 int pos = peso.indexOf(".");
-                                //RETIRA OS ZEROS A ESQUERDA DA PARTE INTEIRA E MANTÉM O SINAL NEGATIVO
+                                //Retira os zeros a esquerda em excesso do sinal negativo até o ponto decimal
                                 peso = "-" + peso.replace(peso.substring(0, (pos - 1)), peso.substring(1, (pos - 1)).replaceFirst("0*", ""));
-                            } else { //SE NÃO TIVER PONTO DECIMAL
-                                //RETIRA OS ZEROS A ESQUERDA E MANTEM O SINAL NEGATIVO
+                            } else { //Se não tiver ponto decimal
+                                //Retira os zeros a esquerda mantém o sinal negativo
                                 peso = "-" + peso.substring(1, 6).replaceFirst("0*", ""); //OK
                             }
-                        } else { //SE TIVER SINAL POSITIVO
-                            if (peso.contains(".")) { //SE TIVER PONTO DECIMAL
+                        } else { //Se tiver sinal positivo
+                            if (peso.contains(".")) { //Se tiver ponto decimal
                                 int pos = peso.indexOf(".");
-                                //RETIRA ZEROS A ESQUERDA DA PARTE INTEIRA
+                                //Retira zeros a esquerda em excesso até o ponto decimal
                                 peso = (pos <= 2) ? peso.replaceFirst(peso.substring(1, (pos - 1)), peso.substring(1, (pos - 1)).replaceFirst("0*", "")) : peso.replace(peso.substring(1, (pos - 1)), peso.substring(1, (pos - 1)).replaceFirst("0*", ""));
-                            } else { //SE NÃO TIVER PONTO DECIMAL
-                                try {//TENTE REALIZAR ESSA SUBSTITUIÇÃO
-                                    //RETIRA ZEROS A ESQUERDA
+                            } else { //Se não tiver ponto decimal
+                                try {//Tente realizar essa substituição
+                                    //Retira zeros a esquerda
                                     peso = peso.substring(1, 6).replaceFirst("0*", ""); //OK
-                                } catch (Exception ex) { //SE HOUVER PROBLEMA USE ESSA
-                                    //RETIRA ZEROS A ESQUERDA
+                                } catch (Exception ex) { //Se houver problema use este bloco
+                                    //Retira zeros a esquerda
                                     peso = peso.substring(1, 5).replaceFirst("0*", ""); //OK
                                 }
                             }
                         }
                     }
 
-                    //RETIRA ESPAÇOS EM BRANCO DO PESO
-                    if (peso.contains(" ")) {
-                        peso = peso.replace(" ", "");
-                    };
+                    //Retira espaços em branco do peso
+                    peso = peso.trim();
 
-                    //ATUALIZA O VALOR NA LISTA DE PESOS
+                    //Atualiza o valor na lista de pesos
                     pesos.set(cnt, peso);
 
-                    //PEGA O VALOR DE ACORDO COM A CONTAGEM E ATRIBUI A VARIAVEL CORRETA
+                    //Pega o valor de acordo com a contagem e atribui a variavel correta
                     switch (cnt) {
                         case 0:
                             peso_bru = peso;
@@ -152,7 +99,7 @@ public class Formatacao {
                             peso_liq = peso;
                             break;
                         case 2:
-                            //IDENTIFICA SE TEM TARA(SE TARA TIVER ALGUM VALOR)
+                            //Identifica se tem tara(Valor diferente de 0)
                             if (Double.parseDouble(peso) != 0.0) {
                                 comTara = true;
                             }
@@ -162,34 +109,34 @@ public class Formatacao {
                     cnt++;
                 }
 
-                if (comTara) { //SE FOR DETECTADO QUE EXISTE TARA
-                    if (temVirgula) { //SE A TARA TIVER PONTO DECIMAL
-                        //FAZ O CALCULO DO PESO LIQUIDO COM TARA PARA RESULTAR PESO BRUTO (COM PONTO)
+                if (comTara) { //Se tiver tara
+                    if (temVirgula) { //Se a tara tiver ponto decimal
+                        //Faz o calculo do peso liquido com tara para resultar o peso bruto(com ponto decimal).
                         Float pb = Float.parseFloat(peso_liq) + Float.parseFloat(tara);
                         dados.put("peso_bru", formatoDecimal(casasDecimais, pb));
-                    } else { // SE NÃO TIVER PONTO DECIMAL
-                        //FAZ O CALCULO DO PESO LIQUIDO COM TARA PARA RESULTAR PESO BRUTO (SEM PONTO)
+                    } else { // Se não tiver ponto decimal
+                        //Faz o calculo do peso liquido com tara para resultar o peso bruto(sem ponto decimal).
                         int pb = Integer.parseInt(peso_liq) + Integer.parseInt(tara);
                         dados.put("peso_bru", String.valueOf(pb));
                     }
-                } else { //SE NÃO TIVER TARA
+                } else { //Se não tiver tara
                     dados.put("peso_bru", peso_bru);
                 }
                 dados.put("estavel", !dado.contains("*") ? "E" : "O");
                 dados.put("peso_liq", peso_liq);
                 dados.put("tara", tara);
-            } else if (sobrecarga) { //SE ESTIVER COM SOBRECARGA
+            } else if (sobrecarga) { //Se estiver com sobrecarga
                 dados.put("estavel", "SOB");
                 dados.put("peso_bru", "0");
                 dados.put("peso_liq", "0");
                 dados.put("tara", "0");
-            } else if (saturado) { //SE ESTIVER SATURADO
+            } else if (saturado) { //Se estiver saturado
                 dados.put("estavel", "SAT");
                 dados.put("peso_bru", "0");
                 dados.put("peso_liq", "0");
                 dados.put("tara", "0");
             }
-        } catch (Exception ex) {
+        } catch (Exception ex) { //Se houver erro na formatação dos dados
             dados.put("estavel", "ERR");
             dados.put("peso_bru", "0");
             dados.put("peso_liq", "0");
@@ -204,39 +151,47 @@ public class Formatacao {
     //Formatação e tratamento dos dados do indicador WT1000N
     public static Map<String, String> formatarDadosWT1000N(String dado) {
         Map<String, String> dados = new HashMap<String, String>();
-        boolean sobrecarga = dado.contains("OL");
+        boolean sobrecarga = dado.contains("OL"); //Indica se está com sobrecarga
 
         try {
-            if (!sobrecarga) {
+            if (!sobrecarga) { //Se não estiver com sobrecarga
+                //Atribuição de valores
                 String peso_bru = dado.substring(2, 9);
                 String peso_liq = dado.substring(18, 25);
                 String tara = dado.substring(10, 17);
+                //Cria uma lista de Strings para adicionar os valores(Bruto, Liquido e Tara)
                 List<String> pesos = new ArrayList<String>();
                 pesos.add(peso_bru);
                 pesos.add(peso_liq);
                 pesos.add(tara);
                 int cnt = 0;
-                for (String peso : pesos) {
+                for (String peso : pesos) { //Para cada valor na lista iniciar a formatação
                     if (peso.equals("000000 ") || peso.equals("0000000")) {
                         peso = "0";
                     } else {
-                        if (peso.contains("-")) {
-                            if (peso.contains(".")) {
-                                int pos = peso.indexOf(".");
+                        if (peso.contains("-")) { //Se o valor for negativo
+                            if (peso.contains(".")) { //Se o valor tiver ponto
+                                int pos = peso.indexOf("."); //Pega a posição do ponto
+                                //Retira os zeros a esquerda em excesso do sinal negativo até o ponto
                                 peso = "-" + peso.replace(peso.substring(0, (pos - 1)), peso.substring(1, (pos - 1)).replaceFirst("0*", ""));
-                            } else {
+                            } else { // Se não tiver ponto
+                                //Retira os zeros a esquerda em excesso do sinal negativo até o final
                                 peso = "-" + peso.substring(1, 7).replaceFirst("0*", "");
                             }
-                        } else {
-                            if (peso.contains(".")) {
-                                int pos = peso.indexOf(".");
+                        } else { //Se o valor for positivo
+                            if (peso.contains(".")) { //Se o valor tiver ponto
+                                int pos = peso.indexOf("."); //Pega a posição do ponto
+                                //Retira os zeros a esquerda em excesso até o ponto
                                 peso = (pos <= 3) ? peso.replaceFirst(peso.substring(0, (pos - 1)), peso.substring(0, (pos - 1)).replaceFirst("0*", "")) : peso.replace(peso.substring(0, (pos - 1)), peso.substring(0, (pos - 1)).replaceFirst("0*", ""));
                             } else {
+                                //Retira os zeros a esquerda em excesso
                                 peso = peso.replaceFirst("0*", "");
                             }
                         }
-                    }
-                    pesos.set(cnt, peso);
+                    }   
+                    pesos.set(cnt, peso); //Atualiza o valor na lista
+                    
+                    //Observa a contagem e atribui os valores em suas devidas variaveis.
                     switch (cnt) {
                         case 0:
                             peso_bru = peso;
@@ -250,64 +205,73 @@ public class Formatacao {
                     }
                     cnt++;
                 }
+                //Coloca os valores formatados em um Array Map para saída
                 dados.put("estavel", dado.substring(0, 1).equals("0") ? "E" : "O");
                 dados.put("peso_bru", peso_bru);
                 dados.put("tara", tara);
                 dados.put("peso_liq", peso_liq);
-            } else {
+            } else { //Se tiver com sobrecarga
+                //Coloca os valores formatados em um Array Map para saída
                 dados.put("estavel", "SOB");
                 dados.put("peso_bru", "0");
                 dados.put("tara", "0");
                 dados.put("peso_liq", "0");
             }
-        } catch (Exception e) {
+        } catch (Exception e) { //Se houver erro na formatação dos dados
+            //Coloca os valores formatados em um Array Map para saída
             dados.put("estavel", "ERR");
             dados.put("peso_bru", "0");
             dados.put("peso_liq", "0");
             dados.put("tara", "0");
-            e.printStackTrace();
         }
         System.out.println("Peso Bruto: " + dados.get("peso_bru") + "/  Peso Liquido : " + dados.get("peso_liq") + "/  Tara : " + dados.get("tara"));
+        //Saída dos dados
         return dados;
     }
-    
-     //Formatação e tratamento dos dados do indicador WT1000N
+
+    //Formatação e tratamento dos dados do indicador WT1000N
     public static Map<String, String> formatarDadosWT27(String dado) {
         Map<String, String> dados = new HashMap<String, String>();
-        boolean sobrecarga = dado.contains("OL");
-
+        boolean sobrecarga = dado.contains("OL"); //Indica se está com sobrecarga
         try {
-            if (!sobrecarga) {
+            if (!sobrecarga) { //Se não estiver com sobrecarga
+                //Atribuição de valores
                 String peso_bru = dado.substring(5, 12);
                 String peso_liq = dado.substring(24, 31);
                 String tara = dado.substring(15, 21);
+                //Cria uma lista de Strings para adicionar os valores(Bruto, Liquido e Tara)
                 List<String> pesos = new ArrayList<String>();
                 pesos.add(peso_bru);
                 pesos.add(peso_liq);
                 pesos.add(tara);
                 int cnt = 0;
-                for (String peso : pesos) {
+                for (String peso : pesos) { //Para cada valor na lista iniciar a formatação
                     if (peso.equals(" 000000") || peso.equals("000000")) {
                         peso = "0";
                     } else {
-                        if (peso.contains("-")) {
-                            if (peso.contains(".")) {
-                                int pos = peso.indexOf(".");
+                        if (peso.contains("-")) { //Se o valor for negativo
+                            if (peso.contains(".")) { //Se o valor tiver ponto
+                                int pos = peso.indexOf("."); //Pega a posição do ponto
+                                //Retira os zeros a esquerda em excesso do sinal negativo até o ponto
                                 peso = "-" + peso.replace(peso.substring(0, (pos - 1)), peso.substring(1, (pos - 1)).replaceFirst("0*", ""));
-                            } else {
+                            } else { //Se não tiver ponto
+                                //Retira os zeros a esquerda em excesso do sinal negativo até o final
                                 peso = "-" + peso.substring(1, 7).replaceFirst("0*", "");
                             }
-                        } else {
-                            peso = peso.trim();
-                            if (peso.contains(".")) {
-                                int pos = peso.indexOf(".");
+                        } else { //Se o valor for positivo
+                            peso = peso.trim(); //Retira espaço vazio do valor
+                            if (peso.contains(".")) { //Se o valor tiver ponto
+                                int pos = peso.indexOf("."); //Pega a posição do ponto
+                                //Retira os zeros a esquerda em excesso até o ponto
                                 peso = (pos <= 3) ? peso.replaceFirst(peso.substring(0, (pos - 1)), peso.substring(0, (pos - 1)).replaceFirst("0*", "")) : peso.replace(peso.substring(0, (pos - 1)), peso.substring(0, (pos - 1)).replaceFirst("0*", ""));
                             } else {
+                                //Retira os zeros a esquerda em excesso
                                 peso = peso.replaceFirst("0*", "");
                             }
                         }
                     }
-                    pesos.set(cnt, peso);
+                    pesos.set(cnt, peso); //Atualiza o valor na lista
+                    //Observa a contagem e atribui os valores em suas devidas variaveis.
                     switch (cnt) {
                         case 0:
                             peso_bru = peso;
@@ -321,31 +285,88 @@ public class Formatacao {
                     }
                     cnt++;
                 }
+                //Coloca os valores formatados em um Array Map para saída
                 dados.put("estavel", dado.substring(0, 1).equals("E") ? "E" : "O");
                 dados.put("peso_bru", peso_bru);
                 dados.put("tara", tara);
                 dados.put("peso_liq", peso_liq);
-            } else {
+            } else { //Se tiver com sobrecarga
+                //Coloca os valores formatados em um Array Map para saída
                 dados.put("estavel", "SOB");
                 dados.put("peso_bru", "0");
                 dados.put("tara", "0");
                 dados.put("peso_liq", "0");
             }
-        } catch (Exception e) {
+        } catch (Exception e) { //Se houver erro na formatação
+            //Coloca os valores formatados em um Array Map para saída
             dados.put("estavel", "ERR");
             dados.put("peso_bru", "0");
             dados.put("peso_liq", "0");
             dados.put("tara", "0");
-            e.printStackTrace();
         }
         System.out.println("Peso Bruto: " + dados.get("peso_bru") + "/  Peso Liquido : " + dados.get("peso_liq") + "/  Tara : " + dados.get("tara"));
+        //Saída dos dados
         return dados;
     }
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@//
+    
+    //@@@@@@@@@@@@@@@@@ CONVERSÃO PROTOCOLO COMUNICAÇÃO @@@@@@@@@@@@@@@//
+    
+    //CONVERTE OS VALORES DE PESAGEM PARA O PROTOCOLO DE COMUNICAÇÃO WT1000N (0,-000000,-000000,-000000)
+    public static String formatarParaWT1000N(String peso_bru, String peso_liq, String tara, String estabilidade) {
+        String[] dados = new String[4];
+        //Se algum valor vier NULL substituir para um valor padrão
+        dados[0] = (estabilidade == null) ? "E" : estabilidade; //ESTABILIDADE - dados[0]
+        dados[1] = (peso_bru == null) ? "0" : peso_bru; //PESO BRUTO - dados[1]
+        dados[2] = (tara == null) ? "0" : tara; //TARA - dados[2]
+        dados[3] = (peso_liq == null) ? "0" : peso_liq; //PESO LIQUIDO - dados[3]
 
+        String resultado = "";
+        //Formatação do estado de estabilidade
+        if (!dados[0].equals("SOB")) { //Se não estiver em SOBRECARGA
+            switch (dados[0]) {
+                case "E":
+                    dados[0] = "0";
+                    break;
+                case "O":
+                    dados[0] = "1";
+                    break;
+                case "ERR":
+                    dados[0] = "0";
+                    break;
+            }
+
+            for (int i = 1; i < dados.length; i++) { //Percorre o array de dados a partir do 1(Peso Bruto)
+                if (dados[i].contains("-")) { //Se o valor tiver sinal negativo
+                    //Substitui o sinal negativo pelo sinal negativo mais os zeros restantes
+                    dados[i] = dados[i].replace("-", "-" + adicionarZerosWT1000N(dados[i]));
+                } else { //Se o valor tiver sinal positivo
+                    //Coloca zeros a esquerda se necessário para completar a formatação
+                    dados[i] = adicionarZerosWT1000N(dados[i]) + dados[i];
+                }
+            }
+            //Montagem do protocolo para saída
+            resultado += dados[0] + "," + dados[1] + "," + dados[2] + "," + dados[3];
+        } else { //Se estiver em SOBRECARGA
+            //Montagem do protocolo para saida (Sobrecarga)
+            resultado = "0,     ol,     ol,     OL";
+        }
+
+        //Saida do protocolo de comunicação
+        return resultado + "\r\n";
+    }
+    
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@//
+    
+    
+    //@@@@@@@@@@@@@@@@@@@ METODOS UTILITÁRIOS @@@@@@@@@@@@@@@@@@@@@@@@@//
+    
+    //RETORNA A QUANTIDADE DE CASAS DECIMAIS DE UMA STRING
     public static int qtdCasasDecimais(String num) {
         return ((num.length() - 1) - num.indexOf("."));
     }
-
+    
+    //RETORNA UMA STRING FORMATADA DE ACORDO COM AS CASAS DECIMAIS INFORMADAS
     public static String formatoDecimalDouble(int casasdecimais, Double valor) {
         String formato = "";
         switch (casasdecimais) {
@@ -372,7 +393,8 @@ public class Formatacao {
         DecimalFormat df = new DecimalFormat(formato);
         return df.format(valor).replaceAll(",", ".");
     }
-
+    
+    //RETORNA UMA STRING FORMATADA DE ACORDO COM AS CASAS DECIMAIS INFORMADAS
     public static String formatoDecimal(int casasdecimais, Float valor) {
         String formato = "";
         switch (casasdecimais) {
@@ -400,62 +422,15 @@ public class Formatacao {
         return df.format(valor).replaceAll(",", ".");
     }
 
-    public static String formatarParaWT1000N(String peso_bru, String peso_liq, String tara, String estabilidade) {
-        //0,0000000,0000000,0000000
-        estabilidade = (estabilidade == null) ? "E" : estabilidade;
-        peso_bru = (peso_bru == null) ? "0" : peso_bru;
-        peso_liq = (peso_liq == null) ? "0" : peso_liq;
-        tara = (tara == null) ? "0" : tara;
 
-        String resultado = "";
-        if (!estabilidade.equals("SOB")) {
-            switch (estabilidade) {
-                case "E":
-                    resultado = "0,";
-                    break;
-                case "O":
-                    resultado = "1,";
-                    break;
-                 case "ERR":
-                    resultado = "0,";
-                    break;
-            }
-            //FORMATAR PESO BRUTO
-            String pb_dados_add = "";
-            for (int i = 1; i <= (7 - peso_bru.length()); i++) {
-                pb_dados_add += "0";
-            }
-            if (peso_bru.contains("-")) {
-                resultado += peso_bru.replace("-", "-" + pb_dados_add)+",";
-            } else {
-                resultado += pb_dados_add + peso_bru + ",";
-            }
-            
-            //FORMATAR TARA
-            String tara_dados_add = "";
-            for (int i = 1; i <= (7 - tara.length()); i++) {
-                tara_dados_add += "0";
-            }
-            if (tara.contains("-")) {
-                resultado += tara.replace("-", "-" + tara_dados_add)+",";
-            } else {
-                resultado += tara_dados_add + tara +",";
-            }
-            
-            //FORMATAR PESO LIQUIDO
-            String pl_dados_add = "";
-            for (int i = 1; i <= (7 - peso_liq.length()); i++) {
-                pl_dados_add += "0";
-            }
-            if (peso_liq.contains("-")) {
-                resultado += peso_liq.replace("-", "-" + pl_dados_add);
-            } else {
-                resultado += pl_dados_add + peso_liq;
-            }  
-        } else {
-            resultado = "0,     ol,     ol,     OL";
+    private static String adicionarZerosWT1000N(String valor) {
+        String formato = "";
+        for (int i = 1; i <= (7 - valor.length()); i++) {
+            formato += "0";
         }
-        return resultado+"\r\n";
+        return formato;
     }
+    
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@//
 
 }
